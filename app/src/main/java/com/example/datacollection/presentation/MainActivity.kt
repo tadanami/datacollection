@@ -1,12 +1,8 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter and
- * https://github.com/android/wear-os-samples/tree/main/ComposeAdvanced to find the most up to date
- * changes to the libraries and their usages.
- */
-
 package com.example.datacollection.presentation
 
+import android.content.ContentValues
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -20,16 +16,31 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.example.datacollection.R
 import com.example.datacollection.presentation.theme.DatacollectionTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.time.DayOfWeek
+import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             WearApp("Android")
+            Button(onClick = {
+                getTodayRoutine()
+            }) {
+                Text(text = "ワイワイ")
+            }
         }
     }
 }
@@ -37,10 +48,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WearApp(greetingName: String) {
     DatacollectionTheme {
-        /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
-         * version of LazyColumn for wear devices with some added features. For more information,
-         * see d.android.com/wear/compose.
-         */
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -60,6 +67,43 @@ fun Greeting(greetingName: String) {
         color = MaterialTheme.colors.primary,
         text = stringResource(R.string.hello_world, greetingName)
     )
+}
+
+fun getRoutineData(){
+
+    val retrofit = Retrofit.Builder()
+        .baseUrl("https://script.google.com/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    val apiRoutine = retrofit.create(SpreadsheetRoutine::class.java)
+
+
+    GlobalScope.launch {
+        try {
+            withContext(Dispatchers.IO){
+                val response = apiRoutine.getData()
+                if (response.isSuccessful) {
+                    Log.d(ContentValues.TAG, "Success")
+                    val data = response.body()
+                    println(data)
+                } else {
+                    Log.d(ContentValues.TAG, "Error: ${response.code()}")
+                }
+            }
+        }catch(e: Exception){
+            println("Exception caught: ${e.message}")
+        }finally {
+            println("finally block executed")
+        }
+    }
+
+}
+
+fun getTodayRoutine(){
+    val today: LocalDate = LocalDate.now()
+    val dayOfWeek: DayOfWeek = today.dayOfWeek
+    println("Today is $dayOfWeek")
 }
 
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
