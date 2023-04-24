@@ -79,4 +79,9 @@ dependencies {
     //シリアル化用ライブラリ
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0"
 
+    implementation 'androidx.compose.runtime:runtime-livedata:1.1.0'
+
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1"
+    implementation 'androidx.fragment:fragment-ktx:1.3.6'
+
 }
